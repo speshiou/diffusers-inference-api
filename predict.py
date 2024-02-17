@@ -1,9 +1,13 @@
 # Prediction interface for Cog ⚙️
 # https://github.com/replicate/cog/blob/main/docs/python.md
 
+import numpy
+import uuid
+
 from cog import BasePredictor, Input, Path
 
 from diffusers.utils import load_image
+
 from inference import get_face_embedding, inference
 
 
@@ -14,14 +18,17 @@ class Predictor(BasePredictor):
 
     def predict(
         self,
+        prompt: str = Input(description="Input prompt"),
         ref_image: Path = Input(description="Image with faces"),
-        scale: float = Input(
-            description="Factor to scale image by", ge=0, le=10, default=1.5
-        ),
-    ) -> Path:
+    ) -> List[Path]:
         """Run a single prediction on the model"""
         face_image = load_image(ref_image)
+        face_image = numpy.asarray(face_image)
         face_embeddings = get_face_embedding(face_image)
-        # processed_input = preprocess(image)
-        # output = self.model(processed_image, scale)
-        # return postprocess(output)
+        images = inference(prompt, face_embeddings)
+        output_paths = []
+        for image in images:
+            output_path = "/tmp/out-{}.png".format(uuid.uuid1())
+            image.save(output_path)
+            output_paths.append(Path(output_path))
+        return output_paths
