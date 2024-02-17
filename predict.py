@@ -3,6 +3,7 @@
 
 import numpy
 import uuid
+from typing import List
 
 from cog import BasePredictor, Input, Path
 
