@@ -1,0 +1,10 @@
+torch==1.8.0
+torchvision==0.9.0
+diffusers
+transformers
+accelerate
+invisible-watermark>=0.2.0
+opencv-python
+insightface
+onnxruntime
+einops
