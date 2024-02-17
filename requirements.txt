@@ -4,7 +4,6 @@ diffusers
 transformers
 accelerate
 invisible-watermark>=0.2.0
-opencv-python
 insightface
 onnxruntime
 einops

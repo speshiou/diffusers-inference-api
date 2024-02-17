@@ -5,8 +5,7 @@ sys.path.extend(["IP-Adapter"])
 import torch
 
 
-def get_face_embedding(filename):
-    import cv2
+def get_face_embedding(image):
     from insightface.app import FaceAnalysis
 
     app = FaceAnalysis(
@@ -14,7 +13,6 @@ def get_face_embedding(filename):
     )
     app.prepare(ctx_id=0, det_size=(640, 640))
 
-    image = cv2.imread(filename)
     faces = app.get(image)
 
     return torch.from_numpy(faces[0].normed_embedding).unsqueeze(0)
