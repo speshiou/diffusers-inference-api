@@ -1,11 +1,22 @@
 import sys
+from urllib.request import urlretrieve
 
-sys.path.extend(["IP-Adapter"])
+sys.path.extend(["/IP-Adapter"])
 
-import torch
+FACE_ID_MODEL_CACHE = "./faceid-cache"
+FACE_ID_MODEL_URL = "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin?download=true"
+
+
+def download_weights(url, dest):
+    urlretrieve(url, dest)
+
+
+def downloads():
+    download_weights(FACE_ID_MODEL_URL, FACE_ID_MODEL_CACHE)
 
 
 def get_face_embedding(image):
+    import torch
     from insightface.app import FaceAnalysis
 
     app = FaceAnalysis(
@@ -19,13 +30,13 @@ def get_face_embedding(image):
 
 
 def inference(prompt, faceid_embeds):
+    import torch
     from diffusers import StableDiffusionXLPipeline, DDIMScheduler
     from PIL import Image
 
     from ip_adapter.ip_adapter_faceid import IPAdapterFaceIDXL
 
     base_model_path = "SG161222/RealVisXL_V3.0"
-    ip_ckpt = "ip-adapter-faceid_sdxl.bin"
     device = "cuda"
 
     noise_scheduler = DDIMScheduler(
@@ -46,7 +57,7 @@ def inference(prompt, faceid_embeds):
     )
 
     # load ip-adapter
-    ip_model = IPAdapterFaceIDXL(pipe, ip_ckpt, device)
+    ip_model = IPAdapterFaceIDXL(pipe, FACE_ID_MODEL_CACHE, device)
 
     # generate image
     negative_prompt = (

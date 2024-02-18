@@ -28,8 +28,7 @@ build:
 
   # commands run after the environment is setup
   run:
-    - "git clone https://github.com/tencent-ailab/IP-Adapter.git IP-Adapter"
-    - "wget --content-disposition https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin?download=true"
+    - "git clone https://github.com/tencent-ailab/IP-Adapter.git /IP-Adapter"
 
 # predict.py defines how predictions are run on your model
 predict: "predict.py:Predictor"
