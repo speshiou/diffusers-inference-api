@@ -1,6 +1,7 @@
 # Prediction interface for Cog ⚙️
 # https://github.com/replicate/cog/blob/main/docs/python.md
 
+import shutil
 import numpy
 import uuid
 from typing import List
@@ -17,13 +18,18 @@ class Predictor(BasePredictor):
         """Load the model into memory to make running multiple predictions efficient"""
         # self.model = torch.load("./weights.pth")
 
+    def load_image(self, path):
+        print(f"load_image from {path}")
+        shutil.copyfile(path, "/tmp/image.png")
+        return load_image("/tmp/image.png").convert("RGB")
+
     def predict(
         self,
         prompt: str = Input(description="Input prompt"),
         ref_image: Path = Input(description="Image with faces"),
     ) -> List[Path]:
         """Run a single prediction on the model"""
-        face_image = load_image(ref_image)
+        face_image = self.load_image(ref_image)
         face_image = numpy.asarray(face_image)
         face_embeddings = get_face_embedding(face_image)
         images = inference(prompt, face_embeddings)
