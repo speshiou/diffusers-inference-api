@@ -10,7 +10,12 @@ from cog import BasePredictor, Input, Path
 
 from diffusers.utils import load_image
 import yolo
-from utils import get_face_embedding, inference, downloads
+from utils import (
+    get_face_embedding,
+    inference,
+    downloads,
+    inpaint_masked,
+)
 
 
 class Predictor(BasePredictor):
@@ -40,3 +45,24 @@ class Predictor(BasePredictor):
             image.save(output_path)
             output_paths.append(Path(output_path))
         return output_paths
+
+    def restore_faces(inpaint_pipe, image, strength=0.6, **kwargs):
+        result = yolo.detect_faces(image)
+        if not result:
+            return image
+        preview, masks = result
+
+        width, height = image.size
+
+        final_image = image
+        for mask in masks:
+            final_image = inpaint_masked(
+                pipe=inpaint_pipe,
+                image=final_image,
+                mask_image=mask,
+                width=width,
+                height=height,
+                strength=strength,
+                **kwargs,
+            )
+        return final_image

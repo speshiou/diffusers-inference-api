@@ -1,6 +1,6 @@
 import sys
 from urllib.request import urlretrieve
-
+import numpy as np
 from PIL import Image, ImageDraw
 from torchvision.transforms.functional import to_pil_image
 
@@ -16,6 +16,52 @@ def download_weights(url, dest):
 
 def downloads():
     download_weights(FACE_ID_MODEL_URL, FACE_ID_MODEL_CACHE)
+
+
+def inpaint_masked(pipe, **kwargs):
+    image = kwargs["image"]
+    mask_image = kwargs["mask_image"]
+    width, height = image.size
+
+    mask_padding = 0
+    converted_mask = mask_image.convert("L")
+    crop_region = get_crop_region(np.array(converted_mask), mask_padding)
+    crop_region = expand_crop_region(
+        crop_region, width, height, converted_mask.width, converted_mask.height
+    )
+    # print(crop_region)
+    # crop_region = expand_rect_to_multiple_of_8(crop_region)
+    # print(crop_region)
+    x1, y1, x2, y2 = crop_region
+    paste_to = (x1, y1, x2 - x1, y2 - y1)
+
+    # crop image using masked area
+    converted_mask = converted_mask.crop(crop_region)
+    cropped_image = image.crop(crop_region)
+
+    # scale up the masked area to get a better prediction
+    converted_mask = converted_mask.resize((width, height))
+    cropped_image = cropped_image.resize((width, height))
+
+    inputs = {
+        **kwargs,
+        "image": cropped_image,
+        "mask_image": converted_mask,
+    }
+
+    # inpaint
+    inpainted = pipe(**inputs).images[0]
+
+    # overlay the inpainted result onto the original image
+    x, y, w, h = paste_to
+    inpainted = inpainted.resize((w, h))
+
+    final_image = Image.new("RGBA", image.size)
+    final_image.paste(image, (0, 0))
+    final_image.paste(inpainted, (x, y))
+
+    # convert back to RGB in order to make further predictions
+    return final_image.convert("RGB")
 
 
 def get_face_embedding(image):
