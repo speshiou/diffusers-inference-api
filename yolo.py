@@ -3,7 +3,7 @@ from PIL import Image
 from ultralytics import YOLO
 from utils import create_mask_from_bbox, mask_to_pil, download_weights
 
-YOLO_FACE_MODEL_CACHE = "./yolo-face-cache"
+YOLO_FACE_MODEL_CACHE = "./face_yolov8n_v2.pt"
 YOLO_FACE_MODEL_URL = "https://huggingface.co/Bingsu/adetailer/resolve/main/face_yolov8n_v2.pt?download=true"
 
 
