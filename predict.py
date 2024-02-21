@@ -9,7 +9,7 @@ from typing import List
 from cog import BasePredictor, Input, Path
 
 from diffusers.utils import load_image
-
+import yolo
 from utils import get_face_embedding, inference, downloads
 
 
@@ -17,6 +17,7 @@ class Predictor(BasePredictor):
     def setup(self) -> None:
         """Load the model into memory to make running multiple predictions efficient"""
         downloads()
+        yolo.downloads()
 
     def load_image(self, path):
         print(f"load_image from {path}")

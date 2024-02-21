@@ -25,6 +25,8 @@ build:
     - "insightface"
     - "onnxruntime"
     - "einops"
+    - "ultralytics"
+    - "opencv-python"
 
   # commands run after the environment is setup
   run:
