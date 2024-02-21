@@ -46,7 +46,7 @@ class Predictor(BasePredictor):
             output_paths.append(Path(output_path))
         return output_paths
 
-    def restore_faces(inpaint_pipe, image, strength=0.6, **kwargs):
+    def restore_faces(self, inpaint_pipe, image, strength=0.6, **kwargs):
         result = yolo.detect_faces(image)
         if not result:
             return image
