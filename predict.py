@@ -7,6 +7,9 @@ import numpy
 import uuid
 from typing import List
 
+sys.path.extend(["/IP-Adapter"])
+from ip_adapter.ip_adapter_faceid import IPAdapterFaceIDXL
+
 from cog import BasePredictor, Input, Path
 
 from diffusers import (
@@ -22,20 +25,21 @@ from controlnet_aux.processor import Processor
 import yolo
 from utils import (
     get_face_embedding,
-    inference,
-    downloads,
+    download_weights,
     inpaint_masked,
     resize_and_crop,
 )
 
 MODEL_ID = "Lykon/dreamshaper-xl-v2-turbo"
 DEPTH_MODEL_ID = "TencentARC/t2i-adapter-depth-midas-sdxl-1.0"
+FACE_ID_MODEL_CACHE = "./faceid-cache"
+FACE_ID_MODEL_URL = "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin?download=true"
 
 
 class Predictor(BasePredictor):
     def setup(self) -> None:
         """Load the model into memory to make running multiple predictions efficient"""
-        downloads()
+        download_weights(FACE_ID_MODEL_URL, FACE_ID_MODEL_CACHE)
         yolo.downloads()
 
         self.txt2img_pipe = AutoPipelineForText2Image.from_pretrained(
@@ -58,6 +62,8 @@ class Predictor(BasePredictor):
         ).to("cuda")
 
         self.depth_processor = Processor("depth_midas")
+
+        self.ip_pipe = IPAdapterFaceIDXL(self.txt2img_pipe, FACE_ID_MODEL_CACHE, "cuda")
 
     def load_image(self, path):
         print(f"load_image from {path}")
@@ -108,7 +114,10 @@ class Predictor(BasePredictor):
             face_image = self.load_image(faceid_image)
             face_image = numpy.asarray(face_image)
             face_embeddings = get_face_embedding(face_image)
-            images = inference(prompt, face_embeddings)
+            images = self.ip_pipe.generate(
+                faceid_embeds=face_embeddings,
+                **args,
+            )
         else:
             images = self.txt2img_pipe(
                 **args,

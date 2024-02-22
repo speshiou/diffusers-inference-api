@@ -1,22 +1,11 @@
-import sys
 from urllib.request import urlretrieve
-import cv2
 import numpy as np
 from PIL import Image, ImageDraw
 from torchvision.transforms.functional import to_pil_image
 
-sys.path.extend(["/IP-Adapter"])
-
-FACE_ID_MODEL_CACHE = "./faceid-cache"
-FACE_ID_MODEL_URL = "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin?download=true"
-
 
 def download_weights(url, dest):
     urlretrieve(url, dest)
-
-
-def downloads():
-    download_weights(FACE_ID_MODEL_URL, FACE_ID_MODEL_CACHE)
 
 
 def inpaint_masked(pipe, **kwargs):
@@ -77,56 +66,6 @@ def get_face_embedding(image):
     faces = app.get(image)
 
     return torch.from_numpy(faces[0].normed_embedding).unsqueeze(0)
-
-
-def inference(prompt, faceid_embeds):
-    import torch
-    from diffusers import StableDiffusionXLPipeline, DDIMScheduler
-    from PIL import Image
-
-    from ip_adapter.ip_adapter_faceid import IPAdapterFaceIDXL
-
-    base_model_path = "SG161222/RealVisXL_V3.0"
-    device = "cuda"
-
-    noise_scheduler = DDIMScheduler(
-        num_train_timesteps=1000,
-        beta_start=0.00085,
-        beta_end=0.012,
-        beta_schedule="scaled_linear",
-        clip_sample=False,
-        set_alpha_to_one=False,
-        steps_offset=1,
-    )
-
-    pipe = StableDiffusionXLPipeline.from_pretrained(
-        base_model_path,
-        torch_dtype=torch.float16,
-        scheduler=noise_scheduler,
-        add_watermarker=False,
-    )
-
-    # load ip-adapter
-    ip_model = IPAdapterFaceIDXL(pipe, FACE_ID_MODEL_CACHE, device)
-
-    # generate image
-    negative_prompt = (
-        "monochrome, lowres, bad anatomy, worst quality, low quality, blurry"
-    )
-
-    images = ip_model.generate(
-        prompt=prompt,
-        negative_prompt=negative_prompt,
-        faceid_embeds=faceid_embeds,
-        num_samples=2,
-        width=1024,
-        height=1024,
-        num_inference_steps=30,
-        guidance_scale=7.5,
-        seed=2024,
-    )
-
-    return images
 
 
 def resize_and_crop(img, width, height):
