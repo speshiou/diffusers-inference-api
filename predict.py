@@ -45,6 +45,8 @@ class Predictor(BasePredictor):
 
         self.txt2img_pipe = AutoPipelineForText2Image.from_pretrained(
             MODEL_ID,
+            torch_dtype=torch.float16,
+            varient="fp16",
             safety_checker=None,
             requires_safety_checker=False,
         ).to("cuda")
