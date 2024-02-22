@@ -75,7 +75,14 @@ class Predictor(BasePredictor):
 
     def predict(
         self,
-        prompt: str = Input(description="Input prompt"),
+        prompt: str = Input(
+            description="Input prompt",
+            default="An astronaut riding a rainbow unicorn",
+        ),
+        negative_prompt: str = Input(
+            description="Input Negative Prompt",
+            default="",
+        ),
         width: int = Input(
             description="Width of output image",
             default=1024,
@@ -97,6 +104,7 @@ class Predictor(BasePredictor):
 
         args = {
             "prompt": prompt,
+            "negative_prompt": negative_prompt,
             "num_inference_steps": 7,
             "guidance_scale": 2,
         }
