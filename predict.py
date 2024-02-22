@@ -119,7 +119,7 @@ class Predictor(BasePredictor):
                 width=width,
                 height=height,
                 adapter_conditioning_scale=1,
-            )
+            ).images
 
         elif faceid_image:
             face_image = self.load_image(faceid_image)
@@ -134,7 +134,7 @@ class Predictor(BasePredictor):
                 **args,
                 width=width,
                 height=height,
-            )
+            ).images
 
         output_paths = []
         for image in images:
