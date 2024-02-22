@@ -1,5 +1,6 @@
 import sys
 from urllib.request import urlretrieve
+import cv2
 import numpy as np
 from PIL import Image, ImageDraw
 from torchvision.transforms.functional import to_pil_image
@@ -126,6 +127,21 @@ def inference(prompt, faceid_embeds):
     )
 
     return images
+
+
+def resize_and_crop(img, width, height):
+    output_ratio = width / height
+    img_ratio = img.width / img.height
+    if output_ratio > img_ratio:
+        img = img.resize((width, int(width / img_ratio)))
+    else:
+        img = img.resize((int(height * img_ratio), height))
+    img_width, img_height = img.size
+
+    output = Image.new("RGB", (width, height), (255, 255, 255))
+    offset = ((width - img_width) // 2, (height - img_height) // 2)
+    output.paste(img, offset)
+    return output
 
 
 def mask_to_pil(masks, shape: tuple[int, int]) -> list[Image.Image]:

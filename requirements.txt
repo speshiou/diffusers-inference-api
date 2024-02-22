@@ -1,9 +1,0 @@
-torch==2.0.1
-torchvision==0.15.2
-diffusers
-transformers
-accelerate
-invisible-watermark>=0.2.0
-insightface
-onnxruntime
-einops

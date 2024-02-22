@@ -27,6 +27,7 @@ build:
     - "einops"
     - "ultralytics"
     - "opencv-python"
+    - "controlnet-aux==0.0.7"
 
   # commands run after the environment is setup
   run:
