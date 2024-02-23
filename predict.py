@@ -144,9 +144,9 @@ class Predictor(BasePredictor):
             depth_image = self.depth_processor(ref_image, to_pil=True)
             depth_image = resize_and_crop(depth_image, width, height)
             images = self.adapter_pipe(
-                image=depth_image,
-                **args,
+                image=[depth_image] * num_outputs,
                 adapter_conditioning_scale=adapter_scale,
+                **args,
             ).images
 
             restore_faces = True
@@ -155,9 +155,16 @@ class Predictor(BasePredictor):
             face_image = self.load_image(faceid_image)
             face_image = numpy.asarray(face_image)
             face_embeddings = get_face_embedding(face_image)
+
+            kwargs = {
+                **args,
+                "prompt": prompt,
+                "negative_prompt": negative_prompt,
+            }
+
             images = self.ip_pipe.generate(
                 faceid_embeds=face_embeddings,
-                **args,
+                **kwargs,
             )
         else:
             images = self.txt2img_pipe(
