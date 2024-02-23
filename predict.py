@@ -194,7 +194,13 @@ class Predictor(BasePredictor):
             return image
         preview, masks = result
 
+        # override output dimensions with those of the source image
         width, height = image.size
+        kwargs = {
+            **kwargs,
+            "width": width,
+            "height": height,
+        }
 
         final_image = image
         for mask in masks:
@@ -202,8 +208,6 @@ class Predictor(BasePredictor):
                 pipe=inpaint_pipe,
                 image=final_image,
                 mask_image=mask,
-                width=width,
-                height=height,
                 strength=strength,
                 **kwargs,
             )
