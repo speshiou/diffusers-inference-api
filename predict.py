@@ -131,8 +131,8 @@ class Predictor(BasePredictor):
         args = {
             "prompt": [prompt] * num_outputs,
             "negative_prompt": [negative_prompt] * num_outputs,
-            "width:": width,
-            "height:": height,
+            "width": width,
+            "height": height,
             "num_inference_steps": 7,
             "guidance_scale": 2,
         }
