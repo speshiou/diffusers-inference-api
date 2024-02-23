@@ -105,6 +105,12 @@ class Predictor(BasePredictor):
             description="Height of output image",
             default=1024,
         ),
+        num_outputs: int = Input(
+            description="Number of images to output.",
+            ge=1,
+            le=4,
+            default=1,
+        ),
         ref_image: Path = Input(
             description="Image for reference",
             default=None,
@@ -117,8 +123,8 @@ class Predictor(BasePredictor):
         """Run a single prediction on the model"""
 
         args = {
-            "prompt": prompt,
-            "negative_prompt": negative_prompt,
+            "prompt": [prompt] * num_outputs,
+            "negative_prompt": [negative_prompt] * num_outputs,
             "num_inference_steps": 7,
             "guidance_scale": 2,
         }
