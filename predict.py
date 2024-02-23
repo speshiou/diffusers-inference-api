@@ -69,7 +69,14 @@ class Predictor(BasePredictor):
 
         self.depth_processor = Processor("depth_midas")
 
-        self.ip_pipe = IPAdapterFaceIDXL(self.pipe, FACE_ID_MODEL_CACHE, "cuda")
+        ip_pipe = StableDiffusionXLPipeline.from_pretrained(
+            MODEL_ID,
+            torch_dtype=torch.float16,
+            varient="fp16",
+            safety_checker=None,
+            requires_safety_checker=False,
+        ).to("cuda")
+        self.ip_pipe = IPAdapterFaceIDXL(ip_pipe, FACE_ID_MODEL_CACHE, "cuda")
 
     def load_image(self, path):
         print(f"load_image from {path}")
