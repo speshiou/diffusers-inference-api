@@ -16,6 +16,7 @@ from cog import BasePredictor, Input, Path
 from diffusers import (
     StableDiffusionXLPipeline,
     AutoPipelineForText2Image,
+    AutoPipelineForInpainting,
     StableDiffusionXLAdapterPipeline,
     T2IAdapter,
 )
@@ -54,6 +55,8 @@ class Predictor(BasePredictor):
 
         self.txt2img_pipe = AutoPipelineForText2Image.from_pipe(self.pipe)
 
+        self.inpaint_pipe = AutoPipelineForInpainting.from_pipe(self.pipe).to("cuda")
+
         self.adapter = T2IAdapter.from_pretrained(
             DEPTH_MODEL_ID,
             torch_dtype=torch.float16,
@@ -69,6 +72,7 @@ class Predictor(BasePredictor):
 
         self.depth_processor = Processor("depth_midas")
 
+        # create a dedicated sdxl pipeline for IP Adapter to prevent the txt2img pipeline from corrupting
         ip_pipe = StableDiffusionXLPipeline.from_pretrained(
             MODEL_ID,
             torch_dtype=torch.float16,
@@ -119,6 +123,8 @@ class Predictor(BasePredictor):
             "guidance_scale": 2,
         }
 
+        restore_faces = False
+
         if ref_image:
             ref_image = self.load_image(ref_image)
             depth_image = self.depth_processor(ref_image, to_pil=True)
@@ -130,6 +136,8 @@ class Predictor(BasePredictor):
                 height=height,
                 adapter_conditioning_scale=1,
             ).images
+
+            restore_faces = True
 
         elif faceid_image:
             face_image = self.load_image(faceid_image)
@@ -146,6 +154,16 @@ class Predictor(BasePredictor):
                 height=height,
             ).images
 
+            restore_faces = True
+
+        if restore_faces:
+            fixed_images = []
+            for image in images:
+                fixed_image = self.restore_faces(self.inpaint_pipe, image, **args)
+                fixed_images.append(fixed_image)
+
+            images = fixed_images
+
         output_paths = []
         for image in images:
             output_path = "/tmp/out-{}.png".format(uuid.uuid1())
@@ -154,7 +172,7 @@ class Predictor(BasePredictor):
         return output_paths
 
     def restore_faces(self, inpaint_pipe, image, strength=0.6, **kwargs):
-        result = yolo.detect_faces(image)
+        result = yolo.detect_faces(image, confidence=0.6)
         if not result:
             return image
         preview, masks = result
