@@ -14,6 +14,7 @@ from ip_adapter.ip_adapter_faceid import IPAdapterFaceIDXL
 from cog import BasePredictor, Input, Path
 
 from diffusers import (
+    StableDiffusionXLPipeline,
     AutoPipelineForText2Image,
     StableDiffusionXLAdapterPipeline,
     T2IAdapter,
@@ -43,13 +44,15 @@ class Predictor(BasePredictor):
         download_weights(FACE_ID_MODEL_URL, FACE_ID_MODEL_CACHE)
         yolo.downloads()
 
-        self.txt2img_pipe = AutoPipelineForText2Image.from_pretrained(
+        self.pipe = StableDiffusionXLPipeline.from_pretrained(
             MODEL_ID,
             torch_dtype=torch.float16,
             varient="fp16",
             safety_checker=None,
             requires_safety_checker=False,
         ).to("cuda")
+
+        self.txt2img_pipe = AutoPipelineForText2Image.from_pipe(self.pipe)
 
         self.adapter = T2IAdapter.from_pretrained(
             DEPTH_MODEL_ID,
@@ -66,7 +69,7 @@ class Predictor(BasePredictor):
 
         self.depth_processor = Processor("depth_midas")
 
-        self.ip_pipe = IPAdapterFaceIDXL(self.txt2img_pipe, FACE_ID_MODEL_CACHE, "cuda")
+        self.ip_pipe = IPAdapterFaceIDXL(self.pipe, FACE_ID_MODEL_CACHE, "cuda")
 
     def load_image(self, path):
         print(f"load_image from {path}")
