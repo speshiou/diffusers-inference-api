@@ -119,12 +119,20 @@ class Predictor(BasePredictor):
             description="Image with a face",
             default=None,
         ),
+        adapter_scale: float = Input(
+            description="Scale for the adapter conditioning",
+            ge=0,
+            le=1,
+            default=0.6,
+        ),
     ) -> List[Path]:
         """Run a single prediction on the model"""
 
         args = {
             "prompt": [prompt] * num_outputs,
             "negative_prompt": [negative_prompt] * num_outputs,
+            "width:": width,
+            "height:": height,
             "num_inference_steps": 7,
             "guidance_scale": 2,
         }
@@ -138,9 +146,7 @@ class Predictor(BasePredictor):
             images = self.adapter_pipe(
                 image=depth_image,
                 **args,
-                width=width,
-                height=height,
-                adapter_conditioning_scale=1,
+                adapter_conditioning_scale=adapter_scale,
             ).images
 
             restore_faces = True
@@ -156,8 +162,6 @@ class Predictor(BasePredictor):
         else:
             images = self.txt2img_pipe(
                 **args,
-                width=width,
-                height=height,
             ).images
 
             restore_faces = True
