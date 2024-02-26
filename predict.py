@@ -79,7 +79,8 @@ class Predictor(BasePredictor):
             varient="fp16",
             safety_checker=None,
             requires_safety_checker=False,
-        ).enable_model_cpu_offload()
+        )
+        ip_pipe.enable_model_cpu_offload()
 
         self.ip_pipe = IPAdapterFaceIDXL(ip_pipe, FACE_ID_MODEL_CACHE, "cuda")
 
