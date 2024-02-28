@@ -190,7 +190,9 @@ class Predictor(BasePredictor):
             output_paths.append(Path(output_path))
         return output_paths
 
-    def restore_faces(self, inpaint_pipe, image, strength=0.6, **kwargs):
+    def restore_faces(
+        self, inpaint_pipe, image, strength=0.6, max_num_faces=4, **kwargs
+    ):
         result = yolo.detect_faces(image, confidence=0.6)
         if not result:
             return image
@@ -204,8 +206,10 @@ class Predictor(BasePredictor):
             "height": height,
         }
 
+        num_faces = min(max_num_faces, len(masks))
         final_image = image
-        for mask in masks:
+        for i in range(num_faces):
+            mask = masks[i]
             final_image = inpaint_masked(
                 pipe=inpaint_pipe,
                 image=final_image,
