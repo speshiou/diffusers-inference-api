@@ -1,6 +1,7 @@
 # Prediction interface for Cog ⚙️
 # https://github.com/replicate/cog/blob/main/docs/python.md
 
+import os
 import sys
 import shutil
 import torch
@@ -32,6 +33,9 @@ from utils import (
     inpaint_masked,
     resize_and_crop,
 )
+import gcs
+
+GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
 
 MODEL_ID = "Lykon/dreamshaper-xl-v2-turbo"
 DEPTH_MODEL_ID = "TencentARC/t2i-adapter-depth-midas-sdxl-1.0"
@@ -187,7 +191,17 @@ class Predictor(BasePredictor):
         for image in images:
             output_path = "/tmp/out-{}.png".format(uuid.uuid1())
             image.save(output_path)
-            output_paths.append(Path(output_path))
+
+            if GCS_BUCKET_NAME:
+                object_name = output_path.lstrip("/")
+                gcs.upload_blob(GCS_BUCKET_NAME, output_path, object_name)
+                signed_object_url = gcs.generate_download_signed_url_v4(
+                    GCS_BUCKET_NAME, object_name
+                )
+                output_paths.append(signed_object_url)
+            else:
+                output_paths.append(Path(output_path))
+
         return output_paths
 
     def restore_faces(

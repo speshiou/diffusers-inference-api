@@ -28,6 +28,7 @@ build:
     - "ultralytics"
     - "opencv-python"
     - "controlnet-aux==0.0.7"
+    - "google-cloud-storage"
 
   # commands run after the environment is setup
   run:
