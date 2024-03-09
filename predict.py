@@ -33,9 +33,10 @@ from utils import (
     inpaint_masked,
     resize_and_crop,
 )
-import gcs
 
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
+GCS_ENABLE_SIGNED_URL = os.getenv("GCS_ENABLE_SIGNED_URL")
+GCS_ENABLE_SIGNED_BY_KSA = os.getenv("GCS_ENABLE_SIGNED_BY_KSA")
 
 MODEL_ID = "Lykon/dreamshaper-xl-v2-turbo"
 DEPTH_MODEL_ID = "TencentARC/t2i-adapter-depth-midas-sdxl-1.0"
@@ -45,6 +46,13 @@ FACE_ID_MODEL_URL = "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/i
 
 class Predictor(BasePredictor):
     def setup(self) -> None:
+        """Load the uploader info"""
+        self.gcs_signing_service_account = None
+        if GCS_ENABLE_SIGNED_BY_KSA:
+            import gke
+
+            self.gcs_signing_service_account = gke.get_ksa_service_account()
+
         """Load the model into memory to make running multiple predictions efficient"""
         download_weights(FACE_ID_MODEL_URL, FACE_ID_MODEL_CACHE)
         yolo.downloads()
@@ -193,12 +201,19 @@ class Predictor(BasePredictor):
             image.save(output_path)
 
             if GCS_BUCKET_NAME:
+                import gcs
+
                 object_name = output_path.lstrip("/")
-                gcs.upload_blob(GCS_BUCKET_NAME, output_path, object_name)
-                signed_object_url = gcs.generate_download_signed_url_v4(
-                    GCS_BUCKET_NAME, object_name
-                )
-                output_paths.append(signed_object_url)
+                object_url = gcs.upload_blob(GCS_BUCKET_NAME, output_path, object_name)
+                if GCS_ENABLE_SIGNED_URL:
+                    signed_object_url = gcs.generate_download_signed_url_v4(
+                        GCS_BUCKET_NAME,
+                        object_name,
+                        service_account_email=self.gcs_signing_service_account,
+                    )
+                    output_paths.append(signed_object_url)
+                else:
+                    output_paths.append(object_url)
             else:
                 output_paths.append(Path(output_path))
 
