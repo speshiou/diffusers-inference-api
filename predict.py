@@ -63,7 +63,8 @@ class Predictor(BasePredictor):
             varient="fp16",
             safety_checker=None,
             requires_safety_checker=False,
-        ).to("cuda")
+        )
+        self.pipe.enable_model_cpu_offload()
 
         self.txt2img_pipe = AutoPipelineForText2Image.from_pipe(self.pipe)
 
