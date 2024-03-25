@@ -34,11 +34,11 @@ from utils import (
     resize_and_crop,
 )
 
+MODEL_ID = os.getenv("MODEL_ID")
 GCS_BUCKET_NAME = os.getenv("GCS_BUCKET_NAME")
 GCS_ENABLE_SIGNED_URL = os.getenv("GCS_ENABLE_SIGNED_URL")
 GCS_ENABLE_SIGNED_BY_KSA = os.getenv("GCS_ENABLE_SIGNED_BY_KSA")
 
-MODEL_ID = "Lykon/dreamshaper-xl-v2-turbo"
 DEPTH_MODEL_ID = "TencentARC/t2i-adapter-depth-midas-sdxl-1.0"
 FACE_ID_MODEL_CACHE = "./faceid-cache"
 FACE_ID_MODEL_URL = "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid_sdxl.bin?download=true"
