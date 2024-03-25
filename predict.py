@@ -120,6 +120,12 @@ class Predictor(BasePredictor):
             description="Height of output image",
             default=1024,
         ),
+        num_inference_steps: int = Input(
+            description="Number of denoising steps", ge=1, le=500, default=50
+        ),
+        guidance_scale: float = Input(
+            description="Scale for classifier-free guidance", ge=1, le=50, default=7.5
+        ),
         num_outputs: int = Input(
             description="Number of images to output.",
             ge=1,
@@ -140,6 +146,10 @@ class Predictor(BasePredictor):
             le=1,
             default=0.6,
         ),
+        enable_restore_faces: bool = Input(
+            description="Enable face restoration for generated images",
+            default=False,
+        ),
     ) -> List[Path]:
         """Run a single prediction on the model"""
 
@@ -148,8 +158,8 @@ class Predictor(BasePredictor):
             "negative_prompt": [negative_prompt] * num_outputs,
             "width": width,
             "height": height,
-            "num_inference_steps": 7,
-            "guidance_scale": 2,
+            "num_inference_steps": num_inference_steps,
+            "guidance_scale": guidance_scale,
         }
 
         restore_faces = False
@@ -188,7 +198,7 @@ class Predictor(BasePredictor):
 
             restore_faces = True
 
-        if restore_faces:
+        if enable_restore_faces and restore_faces:
             fixed_images = []
             for image in images:
                 fixed_image = self.restore_faces(self.inpaint_pipe, image, **args)
